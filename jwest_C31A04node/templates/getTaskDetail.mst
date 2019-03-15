@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{{title}}</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width"/>
+    <link rel="stylesheet" href="./styles/style.css"/>
+    <link rel="stylesheet" href="./styles/manager.css"/>
+</head>
+<body>
+    <header>
+        <h2>Task Details</h2>
+    </header>
+    <main>
+        <form action="tasks.html" method="post" class="ignoreFormatting actionDiv">
+            <input type="submit" name="{{id}}" value="< Tasks"/>
+        </form>
+        <table class="expandLast">
+            <tr>
+                <th colspan="2">{{title}}</th>
+            </tr>
+            <tr>
+                <th>Status</th>
+                <td>{{status}}</td>
+            </tr>
+            <tr>
+                <th>Created</th>
+                <td>{{dateCreated}}</td>
+            </tr>
+            <tr>
+                <th>Updated</th>
+                <td>{{dateModified}}</td>
+            </tr>
+            <tr>
+                <th>Description</th>
+                <td>{{desc}}</td>
+            </tr>
+        </table>
+    </main>
+</body>
+</html>

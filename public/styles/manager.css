@@ -1,0 +1,28 @@
+.actionDiv
+{
+    text-align: left;
+    margin-bottom: 1em;
+    display: block;
+}
+
+.actionDiv > select
+{
+    background-color: seagreen;
+    color: seashell;
+    border: solid 1px seashell;
+    width: 30vw;
+    max-width: 40em;
+    text-align: left;
+}
+
+.actionDiv > label
+{
+    text-align: right;
+    text-wrap: normal;
+    padding-right: 1em;
+}
+
+table
+{
+    width: 100%;
+}

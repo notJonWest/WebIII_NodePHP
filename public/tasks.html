@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Tasks</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="styles/style.css"/>
+    <link rel="stylesheet" href="styles/manager.css"/>
+</head>
+<body>
+    <header>
+        <h2>Manage Tasks</h2>
+    </header>
+    <main>
+        <div class="actionDiv">
+            <label for="status">Viewing</label>
+            <select id="status" name="status">
+                <option value="0">All</option>
+                <option value="1">To Do</option>
+                <option value="2" selected>In Development</option>
+                <option value="3">Testing</option>
+                <option value="4">Complete</option>
+            </select>
+        </div>
+        <form action="getTaskDetail.php" method="post" class="ignoreFormatting">
+            <table id="tasks" class="hover"></table>
+        </form>
+    </main>
+</body>
+<script
+        src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+<script src="js/tasks.js"></script>
+</html>
