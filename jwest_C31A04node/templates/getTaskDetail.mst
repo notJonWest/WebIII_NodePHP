@@ -33,7 +33,7 @@
             </tr>
             <tr>
                 <th>Description</th>
-                <td>{{desc}}</td>
+                <td>{{description}}</td>
             </tr>
         </table>
     </main>

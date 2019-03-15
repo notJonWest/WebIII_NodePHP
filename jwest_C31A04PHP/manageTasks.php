@@ -1,6 +1,45 @@
 <?php
-    require_once("./include/Task.php");
+require_once("./include/Task.php");
+require_once("./include/functions.php");
 
+if (isset($_POST["deletePrompt"]))
+{
+    ?>
+    <!DOCTYPE html> <!-- DELETE PROMPT /-->
+    <html lang="en">
+        <head>
+            <title>Delete Task</title>
+            <meta charset="UTF-8"/>
+            <meta name="viewport" content="width=device-width"/>
+            <link rel="stylesheet" href="../public/styles/style.css"/>
+        </head>
+        <body>
+            <header>
+                <h2>Are You Sure?</h2>
+            </header>
+            <main>
+                <form method="post" action="./manageTasks.php">
+                    <p>
+                        <label>&nbsp;</label>
+                        <input type="submit" value="No, I want to keep it" name="keep"/>
+                    </p>
+                    <p>
+                        <label>&nbsp;</label>
+                        <input type="submit" value="Yes, delete it" class="secondary" name="delete"/>
+                    </p>
+                    <input type="hidden" name="edit" value="<?php echo $_POST["edit"]; ?>"/>
+                    <input type="hidden" name="title" value="<?php echo $_POST["title"]; ?>"/>
+                    <input type="hidden" name="description" value="<?php echo $_POST["description"]; ?>"/>
+                    <input type="hidden" name="dateCreated" value="<?php echo $_POST["dateCreated"]; ?>"/>
+                    <input type="hidden" name="dateModified" value="<?php echo $_POST["dateModified"]; ?>"/>
+                </form>
+            </main>
+        </body>
+    </html>
+    <?php
+}
+else
+{
     $notificationMsg = "";
     $tasks = array();
 
@@ -14,44 +53,42 @@
     }
 
     $goToEdit = (isset($_POST["edit"]) and !isset($_POST["cancel"]));
+    $validatedArr = validate(["emptyValidatedArr"=>true]);
+
+    $currTask = null;
+    $i = 0;
+    if ($goToEdit)
+    {
+        while ($i < sizeof($tasks) and $currTask == null)
+        {
+            if ($tasks[$i] != null)
+            {
+                if ($_POST["edit"] == $tasks[$i]->getId())
+                    $currTask = &$tasks[$i];
+            }
+            $i++;
+        }
+    }
 
     if (isset($_POST["commitChange"]))
     {
-        $editValid = true;
-        $title = $_POST["title"];
-        $desc = $_POST["description"];
+        $validatedArr = validate($_POST);
+        $goToEdit = !$validatedArr["valid"]; //Go back to edit if not valid;
 
-        if (empty($title))
+        if ($validatedArr["valid"])
         {
-            $editValid = false;
-            $titleMsg = "Please give the task a title.";
-        }
-        if (empty($desc))
-        {
-            $editValid = false;
-            $descMsg = "Please describe the task.";
-        }
-
-        $goToEdit = !$editValid;
-        if ($editValid)
-        {
-            $currTask = null;
-            $i = 0;
-            while ($i < sizeof($tasks) and $currTask == null)
-            {
-                if ($_POST["edit"] == $tasks[$i]->getId())
-                {
-                    $tasks[$i]->fill($_POST);
-                    $tasks[$i]->setDateModified(date("Ymd"));
-                    $currTask = &$tasks[$i];
-                }
-                $i++;
-            }
-
-            $notificationMsg = "Successfully altered " . $currTask->getTitle() . ".";
-
+            $currTask->fill($_POST);
+            $notificationMsg = "Successfully altered " . $currTask->getTitle().".";
             file_put_contents("./List/tasks.json", json_encode($tasks, JSON_PRETTY_PRINT));
         }
+    }
+
+    if (isset($_POST["delete"]))
+    {
+        $currTask->setStatus("-1");
+        file_put_contents("./List/tasks.json", json_encode($tasks, JSON_PRETTY_PRINT));
+        $notificationMsg = "Successfully deleted ".$currTask->getTitle().".";
+        $goToEdit = false;
     }
 
     $selectedTab = "todo";
@@ -62,33 +99,25 @@
 
     if ($goToEdit)
     {
-        $titleMsg = "";
-        $descMsg = "";
+        $title = null;
+        $desc = null;
+        $dateCreated = null;
+        $modified = null;
 
-        if (isset($_POST["commitChange"]))
+        if (isset($_POST["commitChange"]) or isset($_POST["keep"])) //commitChange will only exist if they came from the edit form
         {
             $title = $_POST["title"];
             $desc = $_POST["description"];
-        }
-
-        $currTask = null;
-        $i = 0;
-        while ($i < sizeof($tasks) and $currTask == null)
-        {
-            if ($tasks[$i] != null)
-            {
-                if ($_POST["edit"] == $tasks[$i]->getId())
-                    $currTask = $tasks[$i];
-            }
-            $i++;
+            $dateCreated = $_POST["dateCreated"];
+            $modified = $_POST["dateModified"];
         }
         ?>
         <!DOCTYPE html> <!-- EDIT FORM /-->
         <html lang="en">
         <head>
             <title>Edit <?php echo $currTask->getTitle(); ?></title>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width">
+            <meta charset="UTF-8"/>
+            <meta name="viewport" content="width=device-width"/>
             <link rel="stylesheet" href="../public/styles/style.css"/>
         </head>
         <body>
@@ -99,13 +128,23 @@
             <form method="post" action="./manageTasks.php">
                 <p>
                     <label for="title">Title:</label>
-                    <input type="text" name="title" id="title" class="<?php echo (empty($titleMsg))?"":"invalid error"; ?>" value="<?php echo $currTask->getTitle(); ?>"/>
-                    <span class="errorMsg"><?php echo $titleMsg; ?></span>
+                    <input type="text" name="title" id="title" class="<?php echo (empty($validatedArr["titleMsg"]))?"":"invalid error"; ?>" value="<?php echo $title??$currTask->getTitle(); ?>"/>
+                    <span class="errorMsg"><?php echo $validatedArr["titleMsg"]; ?></span>
                 </p>
                 <p>
                     <label for="description">Description:</label>
-                    <textarea name="description" id="desc" class="<?php echo (empty($descMsg))?"":"invalid error"; ?>"><?php echo $currTask->getDescription();?></textarea>
-                    <span class="errorMsg"><?php echo $descMsg; ?></span>
+                    <textarea name="description" id="desc" class="<?php echo (empty($validatedArr["descMsg"]))?"":"invalid error"; ?>"><?php echo $desc??$currTask->getDescription(); ?></textarea>
+                    <span class="errorMsg"><?php echo $validatedArr["descMsg"]; ?></span>
+                </p>
+                <p>
+                    <label for="created">Date Created:</label>
+                    <input type="text" name="dateCreated" id="created" class="<?php echo (empty($validatedArr["createdMsg"]))?"":"invalid error"; ?>" value="<?php echo $dateCreated??$currTask->getDateCreated(); ?>"/>
+                    <span class="errorMsg"><?php echo $validatedArr["createdMsg"]; ?></span>
+                </p>
+                <p>
+                    <label for="modified">Date Updated:</label>
+                    <input type="text" name="dateModified" id="modified" class="<?php echo (empty($validatedArr["modifiedMsg"]))?"":"invalid error"; ?>" value="<?php echo $modified??date("Y-m-d"); ?>"/>
+                    <span class="errorMsg"><?php echo $validatedArr["modifiedMsg"]; ?></span>
                 </p>
                 <p>
                     <label for="status">Status:</label>
@@ -133,7 +172,7 @@
                             <option value="4">Complete</option>
                             <?php
                         }
-                        else
+                        elseif ($currTask->getStatus() == 4)
                         {
                             ?>
                             <option selected value="4">Complete</option>
@@ -143,7 +182,7 @@
                     </select>
                     <?php
                         if ($currTask->getStatus() == 4)
-                        {
+                        { //Need this because when completed, the dropdown is disabled
                             ?>
                             <input type="hidden" value="4" name="status"/>
                             <?php
@@ -155,9 +194,11 @@
                     <input type="submit" name="commitChange" id="update" value="Update"/>
                     <input type="submit" name="cancel" id="cancel" value="Cancel" class="secondary"/>
                 </p>
+                <p>
+                    <label>&nbsp;</label>
+                    <input type="submit" name="deletePrompt" id="deletePrompt" value="Delete Task" class="secondary"/>
+                </p>
                 <input type="hidden" name="edit" value="<?php echo $currTask->getId() ?>"/>
-                <input type="hidden" name="dateCreated" value="<?php echo $currTask->getDateCreated(); ?>"/>
-                <input type="hidden" name="dateModified" value="<?php echo $currTask->getDateModified(); ?>"/>
             </form>
         </main>
         </body>
@@ -168,33 +209,26 @@ else
 {
     $title = "";
     $desc = "";
+    $created = "";
+    $modified = "";
 
     $titleMsg = "";
     $descMsg = "";
+    $createdMsg = "";
+    $modifiedMsg = "";
 
     if (isset($_POST["newTask"]))
     {
         $title = $_POST["title"];
         $desc = $_POST["description"];
-        $valid = true;
-        if (empty($title))
-        {
-            $valid = false;
-            $titleMsg = "Please give the task a title.";
-        }
-        if (empty($desc))
-        {
-            $valid = false;
-            $descMsg = "Please describe the task.";
-        }
+        $created = $_POST["dateCreated"];
+        $modified = $_POST["dateModified"];
 
-        if ($valid)
+        $validatedArr = validate($_POST);
+
+        if ($validatedArr["valid"])
         {
             $newTask = new Task($_POST);
-            $newTask->setTitle($title);
-            $newTask->setDescription($desc);
-            $newTask->setDateCreated(date("Ymd"));
-            $newTask->setDateModified(date("Ymd"));
             $newTask->setStatus(1);
 
             array_push($tasks, $newTask);
@@ -206,6 +240,8 @@ else
             //Blank fields to avoid sticky form after valid submission
             $title = "";
             $desc = "";
+            $created = "";
+            $modified = "";
         }
     }
     usort($tasks, Task::sort(["status", "heaven"], ["dateModified", "hell"],
@@ -216,8 +252,8 @@ else
 <html lang="en">
 <head>
     <title>Tasks</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width">
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width"/>
     <link rel="stylesheet" href="../public/styles/style.css"/>
 </head>
 <body>
@@ -248,28 +284,31 @@ else
                             $taskCount = 0;
                             foreach ($tasks as $task)
                             {
-                                if ($index == 0 or $task->getStatus() == $index)
+                                if ($task->getStatus() != -1)
                                 {
-                                    $taskCount++;
-                                    ?>
-                                    <tr class="submitable">
-                                        <td>
-                                            <label for="a_task<?php echo $task->getId(); ?>"><?php echo $task->getTitle(); ?></label>
-                                            <input type="submit" class="hide" name="edit" id="a_task<?php echo $task->getId(); ?>" value="<?php echo $task->getId(); ?>"/>
-                                        </td>
-                                        <td><label for="a_task<?php echo $task->getId(); ?>"><?php echo date("Y/m/d", strtotime($task->getDateCreated())); ?></label></td>
-                                        <td><label for="a_task<?php echo $task->getId(); ?>"><?php echo date("Y/m/d", strtotime($task->getDateModified())); ?></label></td>
-                                        <?php
-                                        if ($index==0)
-                                        {
-                                            ?>
-                                            <td><label for="a_task<?php echo $task->getId(); ?>"><?php echo Task::numToStatus($task->getStatus()); ?></label></td>
-                                            <?php
-                                        }
+                                    if ($index == 0 or $task->getStatus() == $index)
+                                    {
+                                        $taskCount++;
                                         ?>
-                                        <td><label for="a_task<?php echo $task->getId(); ?>"><?php echo $task->getDescription(); ?></label></td>
-                                    </tr>
-                                    <?php
+                                        <tr class="submitable">
+                                            <td>
+                                                <label for="a_task<?php echo $task->getId(); ?>"><?php echo $task->getTitle(); ?></label>
+                                                <input type="submit" class="hide" name="edit" id="a_task<?php echo $task->getId(); ?>" value="<?php echo $task->getId(); ?>"/>
+                                            </td>
+                                            <td><label for="a_task<?php echo $task->getId(); ?>"><?php echo $task->getDateCreated(); ?></label></td>
+                                            <td><label for="a_task<?php echo $task->getId(); ?>"><?php echo $task->getDateModified(); ?></label></td>
+                                            <?php
+                                            if ($index==0)
+                                            {
+                                                ?>
+                                                <td><label for="a_task<?php echo $task->getId(); ?>"><?php echo Task::numToStatus($task->getStatus()); ?></label></td>
+                                                <?php
+                                            }
+                                            ?>
+                                            <td><label for="a_task<?php echo $task->getId(); ?>"><?php echo $task->getDescription(); ?></label></td>
+                                        </tr>
+                                        <?php
+                                    }
                                 }
                             }
                             if ($taskCount == 0)
@@ -295,13 +334,23 @@ else
                     <form method="post" action="./manageTasks.php">
                         <p>
                             <label for="title">Title:</label>
-                            <input type="text" name="title" id="title" class="<?php echo (empty($titleMsg))?"":"invalid error"; ?>" value="<?php echo $title; ?>"/>
-                            <span class="errorMsg"><?php echo $titleMsg; ?></span>
+                            <input type="text" name="title" id="title" class="<?php echo (empty($validatedArr["titleMsg"]))?"":"invalid error"; ?>" value="<?php echo $title; ?>"/>
+                            <span class="errorMsg"><?php echo $validatedArr["titleMsg"]; ?></span>
                         </p>
                         <p>
                             <label for="desc">Description:</label>
-                            <textarea name="description" id="desc" class="<?php echo (empty($descMsg))?"":"invalid error"; ?>"><?php echo $desc; ?></textarea>
-                            <span class="errorMsg"><?php echo $descMsg; ?></span>
+                            <textarea name="description" id="desc" class="<?php echo (empty($validatedArr["descMsg"]))?"":"invalid error"; ?>"><?php echo $desc; ?></textarea>
+                            <span class="errorMsg"><?php echo $validatedArr["descMsg"]; ?></span>
+                        </p>
+                        <p>
+                            <label for="created">Date Created:</label>
+                            <input type="text" name="dateCreated" id="created" class="<?php echo (empty($validatedArr["createdMsg"]))?"":"invalid error"; ?>" value="<?php echo (empty($created))?date("Y-m-d"):$created; ?>"/>
+                            <span class="errorMsg"><?php echo $validatedArr["createdMsg"]; ?></span>
+                        </p>
+                        <p>
+                            <label for="modified">Date Updated:</label>
+                            <input type="text" name="dateModified" id="modified" class="<?php echo (empty($validatedArr["modifiedMsg"]))?"":"invalid error"; ?>" value="<?php echo (empty($modified))?date("Y-m-d"):$modified; ?>"/>
+                            <span class="errorMsg"><?php echo $validatedArr["modifiedMsg"]; ?></span>
                         </p>
                         <p>
                             <label>&nbsp;</label>
@@ -332,4 +381,5 @@ else
 </html>
 <?php
     }
+}
 ?>

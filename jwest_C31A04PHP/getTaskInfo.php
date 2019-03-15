@@ -10,7 +10,10 @@
         $tasksJSON = json_decode(file_get_contents("./List/tasks.json"), true);
 
         foreach($tasksJSON as $task)
-            array_push($tasks, new Task($task));
+        {
+            if ($task["status"] != -1)
+                array_push($tasks, new Task($task));
+        }
         usort($tasks, Task::sort("status", ["dateModified", "desc"], "title", "id"));
 
         $tasksJSON = array();
@@ -25,8 +28,6 @@
                     if ($attr != "id" and $attr != "title" and
                         $attr != "dateModified" and $attr != "status")
                             unset($task[$attr]);
-
-                $task["dateModified"] = date("Y/m/d", strtotime($task["dateModified"]));
 
                 array_push($tasksJSON, $task);
             }

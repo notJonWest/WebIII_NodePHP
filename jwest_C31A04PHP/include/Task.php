@@ -107,6 +107,8 @@ class Task extends MultiSort implements JsonSerializable
                 return "Testing";
             case 4:
                 return "Complete";
+            case -1:
+                return "Deleted";
             default:
                 return "Unknown";
         }

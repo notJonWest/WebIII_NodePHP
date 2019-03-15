@@ -78,8 +78,8 @@ header, form > p > input[type="button"], form input[type="submit"], select
 
 form > p > input[type="button"].secondary, form input[type="submit"].secondary
 {
-    font-size: 0.7em;
     float: right;
+    font-size: 0.7em;
 }
 
 form
@@ -120,14 +120,28 @@ form > p > input[type="text"], form > p > input[type="password"]
     height: 1.4em;
 }
 
+select
+{
+    width: 30vw;
+    max-width: 30em;
+    height: 1.4em;
+}
+
+form > p > input[type="date"]
+{
+    background-color: rgba(245, 245, 220, 0.5);
+    height: 1.4em;
+}
+
 form > p > textarea
 {
     border: inset 2px #EBE9ED;
     background-color: rgba(245, 245, 220, 0.5);
     width: 30vw;
-    max-width: 30em;
+    max-width: 30.75em;
     resize: vertical;
     height: 10em;
+    min-height: 1.4em;
     font-family: sans-serif;
     font-size: small;
 }
